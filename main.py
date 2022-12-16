@@ -12,9 +12,9 @@ POPULATION_SIZE = 100
 def subjects():
         subjects = [[], [], [], [], []]
         for i in range(5):
-            for row in cur.execute(f"SELECT subject_id,staff_id,hours FROM subjects WHERE year=={i+1};"):
-                subjects[i].append(str(row[0]+':'+row[1]+":"+str(row[2])))
-
+            for row in cur.execute(f"SELECT subject_id,staff_id,hours,LAB FROM subjects WHERE year=={i+1};"):
+                subjects[i].append(str(row[0]+':'+row[1]+":"+str(row[2])+':'+str(row[3])))
+            subjects[i]=sorted(subjects[i],key=lambda x: x.split(':')[-1])
         return(subjects)
 
 
@@ -31,13 +31,12 @@ class Individual(object):
 
     @classmethod
     def create_gnome(self):
-        sub=SUBJECTS
         d={}
         j=1
     
     
-        for i in sub:
-            l=np.array([j[:-2] for j in i for _ in range(int(j[-1]))])
+        for i in SUBJECTS:
+            l=np.array([j[:-4] for j in i for _ in range(int(j[-3]))])
             np.random.shuffle(l)
             d[j]=(l.reshape(6,5))
             j+=1
@@ -101,7 +100,7 @@ def main():
     for _ in range(POPULATION_SIZE):
         gnome = Individual.create_gnome()
         population.append(Individual(gnome))
-        
+        return ""
     while not found:
 
       # sort the population in increasing order of fitness score
@@ -140,7 +139,6 @@ def main():
 if __name__ =="__main__":
     cur=con.cursor()
     SUBJECTS = subjects()
-
     main()
     con.close()
     
