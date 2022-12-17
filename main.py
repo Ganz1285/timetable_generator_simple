@@ -13,7 +13,7 @@ def subjects():
         subjects = [[], [], [], [], []]
         for i in range(5):
             for row in cur.execute(f"SELECT subject_id,staff_id,hours FROM subjects WHERE year=={i+1};"):
-                subjects[i].append(str(row[0]+':'+row[1]+":"+str(row[2])))
+                subjects[i].append(str(row[0]+':'+str(row[1])+':'+str(row[2])))
         return(subjects)
 
 
@@ -31,10 +31,9 @@ class Individual(object):
     @classmethod
     def create_gnome(self):
         sub=SUBJECTS
-        d={}
         j=1
     
-    
+        d={}
         for i in sub:
             l=np.array([j[:-2] for j in i for _ in range(int(j[-1]))])
             np.random.shuffle(l)
@@ -49,8 +48,9 @@ class Individual(object):
 
     def cal_fitness(self):
         fit=0
-
-
+        # print(self.chromosome)
+        sch=self.schedule()
+        # print(sch)
         #lab classes 
         for i in range(1,6):
             lst=[]
@@ -63,7 +63,14 @@ class Individual(object):
             elif i == 4 and sorted(lst)!=[1,2,2]:
                 fit+=1
 
-        
+        for i in range(1,6):
+            for j in sch[i]:
+                if len(set(j))!=len(j):
+                    fit+=0.25
+        for i in range(1,6):
+            for j in self.chromosome[i]:
+                if len(set(j))<3:
+                    fit+=0.25          
 
         return fit
 
@@ -73,9 +80,9 @@ class Individual(object):
             lst=[]
             for j,p in zip(self.chromosome[i],par2.chromosome[i]):
                 prob=random.random()
-                if prob<0.50:
+                if prob<0.45:
                     lst.append(j)
-                elif prob<1.0:
+                elif prob<0.90:
                     lst.append(p)
                 else:
                     lst.append(self.mutated_genes(i))
@@ -83,10 +90,28 @@ class Individual(object):
         
         return Individual(l)
 
-    # def mutated_genes(self,year):
-        
-    #     return random.choice(Individual.create_gnome()[year])
 
+    def schedule(self):
+
+        sch={1:[[],[],[],[],[],[]],2:[[],[],[],[],[],[]],3:[[],[],[],[],[],[]],4:[[],[],[],[],[],[]],5:[[],[],[],[],[],[]]}
+        for i in range(6):
+            for j in range(5):
+                for k in range(1,6):
+                    # print(k,i,j)
+                    # print(self.chromosome[k][i][j])
+                    sch[j+1][i].append(self.chromosome[k][i][j].split(':')[-1])
+
+                    
+        return sch
+    def mutated_genes(self,year):
+        
+        return random.choice(Individual.create_gnome()[year])
+
+
+class Class:
+    def __init__(self):
+        self.subjects=subjects
+        
 
 def main():
     global POPULATION_SIZE
@@ -136,6 +161,7 @@ def main():
     print(f"Generation:{generation}")
     print(population[0].chromosome)
     print(f"Fitness:{population[0].fitness}")
+    print(f"Fitness:{population[0].schedule()}")
 
 if __name__ =="__main__":
     cur=con.cursor()
