@@ -54,7 +54,15 @@ for i in l:
 
 d=np.array(d,dtype=object)
 it={1:[],2:[],3:[],4:[],5:[]}
+timetable={}
 for i in d:
     for j in i:
-        it[j.year].append(j.name)     
-    
+        it[j.year].append(j)     
+for i in it:
+    x=np.array(it[i])
+    np.random.shuffle(x)
+    p=x.reshape(6,5)
+    timetable[i]=p
+
+for q,w in timetable.items():
+    print(q,w)
