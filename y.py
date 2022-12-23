@@ -108,7 +108,16 @@ def schedule_labs(each_year,each_class):
 
 
 
-
+def display_classes(each_class):
+    for i,t in each_class.items():
+        print("YEAR:",i)
+        print(" ".join(['{:5}'.format(q) for q in range(1,6)]))
+        z=1
+        for k in t:
+            print(z,' '.join(['{:5}'.format(p.subject.id) if p.subject!=None else '{:5}'.format('None') for p in k ]))
+            z+=1
+            
+        print()
 
 
 
@@ -118,6 +127,7 @@ if __name__ == "__main__":
     each_subject=define_subjects()
     each_year=details_of_each_year(each_subject)
     schedule_labs(each_year,each_class)
+    display_classes(each_class)
     
 
 
