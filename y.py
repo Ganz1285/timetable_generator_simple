@@ -42,8 +42,11 @@ def define_each_classes():
     for i in range(1,num_years+1):
         each_classes[i]=[]
         for j in range(1,num_dayorders+1):
+            each_classes[i].append([])
             for k in range(1,num_hoursperday+1):
-                each_classes[i].append(Class(j,i,k))
+                each_classes[i][j-1].append(Class(j,i,k))
+
+
     return each_classes
 
 
@@ -77,6 +80,32 @@ def details_of_each_year(subject_details):
 
 
     
+def schedule_labs(each_year,each_class):
+    for i in each_year:
+        x=3
+        num_hours=int(i.lab.hours)
+        z=i.year
+        q=0
+        while num_hours!=1:
+            if num_hours>3:
+                if i.year==x:
+                    y=x+2
+                    each_class[i.year][y][z].subject=i.lab 
+                    z+=1
+                else:
+                    y=x-2
+                    each_class[i.year][y][q].subject=i.lab
+                    q+=1
+                
+            else:
+                fetch=each_class[i.year][i.year-1][x].subject
+                if fetch is None:
+                    each_class[i.year][i.year-1][x].subject=i.lab
+                    x+=1
+            num_hours-=1
+        each_class[i.year][(i.year+1)%6][1].subject=i.lab
+        
+
 
 
 
@@ -85,10 +114,10 @@ def details_of_each_year(subject_details):
 
 
 if __name__ == "__main__":
-    x=define_each_classes()
-    y=define_subjects()
-    z=details_of_each_year(y)
-
-
+    each_class=define_each_classes()
+    each_subject=define_subjects()
+    each_year=details_of_each_year(each_subject)
+    schedule_labs(each_year,each_class)
+    
 
 
