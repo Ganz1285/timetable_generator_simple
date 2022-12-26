@@ -166,10 +166,12 @@ def schedule_labs(each_year, each_class):
 
 
 def display_classes(each_class):
+    it={}
     for i, t in each_class.items():
         print("YEAR:", i)
         print(" ".join(["{:5}".format(q) for q in range(1, 6)]))
         z = 1
+        it[i]={}
         for k in t:
             print(
                 z,
@@ -183,7 +185,6 @@ def display_classes(each_class):
                 ),
             )
             z += 1
-
         print()
 
 
@@ -195,24 +196,40 @@ def shuffle_classes(each_subject, each_class):
             x = [k for _ in range(int(k.hours)) if not k.islab]
             d[i].extend(x)
         np.random.shuffle(d[i])
+
     for z,q in d.items():
         l=[]
+        x=0
         for k in range(30):
-            x=k//5
-            y=k%5 
-            p=0
-            if k<len(q):
-                if each_class[z][x][y].subject is None:
-                    each_class[z][x][y].subject=d[z][k]
-                else:
-                    l.append(d[z][k])
+            if each_class[z][k//5][k%5].subject is None:
+                each_class[z][k//5][k%5].subject=q[x]
+                x+=1
             else:
-                if each_class[z][x][y].subject is None:
-                    each_class[z][x][y].subject=l[p]
-                else:
-                    pass
-                p+=1
+                pass
+            
+    it={}
 
+
+def debug_result(each_class):
+    chk=[]
+    it={}
+    for i,j in each_class.items():
+        it[i]={}
+        for k in j:
+            for p in k:
+                if p.subject.name+"-"+p.subject.hours not in it[i]:
+                    it[i][p.subject.name+"-"+p.subject.hours]=1
+                else:
+                    it[i][p.subject.name+"-"+p.subject.hours]+=1
+
+    for i,j in it.items():
+        for k,l in j.items():
+            chk.append(k[-1]==str(l))
+
+    if not all(chk):
+        print("Produced timetable is incorrect ")
+    else:
+        print("Produced timetable is correct")
 
 
 
@@ -223,9 +240,9 @@ if __name__ == "__main__":
     each_year = details_of_each_year(each_subject)
     schedule_labs(each_year, each_class)
 
-    # shuffle_classes(each_subject, each_class)
+    shuffle_classes(each_subject, each_class)
     display_classes(each_class)
-    # debug_result(each_class)
+    debug_result(each_class)
 
 
 
@@ -233,7 +250,7 @@ if __name__ == "__main__":
 
 """
 INCORRECTLY WORKING FUNCTIONS:
-    1. shuffle_classes(each_subject, each_class):
+
 
 
 """
