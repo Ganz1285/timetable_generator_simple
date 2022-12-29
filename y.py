@@ -9,6 +9,10 @@ __email__ = "selvaganz1285@gmail.com"
 
 import numpy as np
 from numpy import random
+import random
+
+
+POPULATION_SIZE = 100
 
 
 class subject:
@@ -50,6 +54,18 @@ class years:
         self.subjects = []
         self.instructors = []
         self.lab = None
+
+
+class Instructors:
+    """
+    details of each year of a programme
+
+    """
+
+    def __init__(self, name,id):
+        self.name=name
+        self.id=id
+        self.subjects=[]
 
 
 def define_each_classes():
@@ -124,6 +140,21 @@ def define_subjects():
     return l
 
 
+def define_staffs(each_subjects):
+    l=[]
+    check={}
+    for i,j in each_subjects.items():
+        for k in j:
+            if k.instructor not in check:
+                x=Instructors(k.instructor,k.instructor)
+                x.subjects.append(k)
+                check[k.instructor]=x
+                l.append(x)
+            else:
+                check[k.instructor].subjects.append(k)
+
+    return l
+
 def details_of_each_year(subject_details):
     year = []
     for j in subject_details:
@@ -166,12 +197,12 @@ def schedule_labs(each_year, each_class):
 
 
 def display_classes(each_class):
-    it={}
+    it = {}
     for i, t in each_class.items():
         print("YEAR:", i)
         print(" ".join(["{:5}".format(q) for q in range(1, 6)]))
         z = 1
-        it[i]={}
+        it[i] = {}
         for k in t:
             print(
                 z,
@@ -188,7 +219,7 @@ def display_classes(each_class):
         print()
 
 
-def shuffle_classes(each_subject, each_class):
+def shuffle_classes(each_subject, each_class, each_staff):
     d = {}
     for i, t in each_subject.items():
         d[i] = []
@@ -197,34 +228,54 @@ def shuffle_classes(each_subject, each_class):
             d[i].extend(x)
         np.random.shuffle(d[i])
 
-    for z,q in d.items():
+
+    # for z, q in d.items():
+    #     l = []
+    #     x = 0
+    #     for k in range(30):
+    #         if each_class[z][k // 5][k % 5].subject is None:
+    #             each_class[z][k // 5][k % 5].subject = q[x]
+    #             x += 1
+    #         else:
+    #             pass
+
+
+    for i in range(30):
         l=[]
-        x=0
-        for k in range(30):
-            if each_class[z][k//5][k%5].subject is None:
-                each_class[z][k//5][k%5].subject=q[x]
-                x+=1
-            else:
-                pass
-            
-    it={}
+        z=0
+        for x in range(1,6):
+            subj=each_class[x][i//5][i%5]
+            if subj.subject is None:
+                if d[x][z].instructor not in l:
+                    each_class[x][i//5][i%5].subject=d[x][z]
+                    l.append(d[x][z].instructor)
+                    z+=1
+                else:
+                    z+=1
+                    
+
+    
+
+
+    
+
 
 
 def debug_result(each_class):
-    chk=[]
-    it={}
-    for i,j in each_class.items():
-        it[i]={}
+    chk = []
+    it = {}
+    for i, j in each_class.items():
+        it[i] = {}
         for k in j:
             for p in k:
-                if p.subject.name+"-"+p.subject.hours not in it[i]:
-                    it[i][p.subject.name+"-"+p.subject.hours]=1
+                if p.subject.name + "-" + p.subject.hours not in it[i]:
+                    it[i][p.subject.name + "-" + p.subject.hours] = 1
                 else:
-                    it[i][p.subject.name+"-"+p.subject.hours]+=1
+                    it[i][p.subject.name + "-" + p.subject.hours] += 1
 
-    for i,j in it.items():
-        for k,l in j.items():
-            chk.append(k[-1]==str(l))
+    for i, j in it.items():
+        for k, l in j.items():
+            chk.append(k[-1] == str(l))
 
     if not all(chk):
         print("Produced timetable is incorrect ")
@@ -232,25 +283,83 @@ def debug_result(each_class):
         print("Produced timetable is correct")
 
 
+class Individual(object):
+    def __init__(self, chromosome):
+        self.chromosome = chromosome
+        # self.sched=self.get_schedule()
+        self.fitness = self.cal_fitness()
+
+    @classmethod
+    def create_gnome(self):
+        each_class = define_each_classes()
+        each_subject = define_subjects()
+        each_year = details_of_each_year(each_subject)
+        schedule_labs(each_year, each_class)
+        each_staff=define_staffs(each_subject)
+        # shuffle_classes(each_subject, each_class,each_staff)
+        # display_classes(each_class)
+        return each_class
+
+    def cal_fitness(self):
+        fit = 0
+
+
+        return random.choice(range(10))
+
+
+def main():
+
+    # current generation
+    generation = 1
+
+    found = False
+    population = []
+
+
+    # create initial population
+    for _ in range(POPULATION_SIZE):
+        gnome = Individual.create_gnome()
+        population.append(Individual(gnome))
+        return ""
+    
+
+    while not found:
+
+        # sort the population in increasing order of fitness score
+        population = sorted(population, key=lambda x: x.fitness)
+        if population[0].fitness <= 0:
+            found = True
+            # break
+            # break
+            # Otherwise generate new offsprings for new generation
+        new_generation = []
+
+        # Perform Elitism, that mean 10% of fittest population
+        # goes to the next generation
+        s = int((10 * POPULATION_SIZE) / 100)
+        new_generation.extend(population[:s])
+
+        s = int((90 * POPULATION_SIZE) / 100)
+
+
+
+    it = {}
+    for i, t in population[0].chromosome.items():
+        it[i] = []
+        x = 0
+        for k in t:
+            it[i].append([])
+            for p in k:
+                it[i][x].append(p.subject.name)
+            x += 1
+    return it
+
 
 if __name__ == "__main__":
-    each_class = define_each_classes()
-    # display_classes(each_class)
-    each_subject = define_subjects()
-    each_year = details_of_each_year(each_subject)
-    schedule_labs(each_year, each_class)
 
-    shuffle_classes(each_subject, each_class)
-    display_classes(each_class)
-    debug_result(each_class)
-
-
-
-
-
+    result = main()
+    
 """
 INCORRECTLY WORKING FUNCTIONS:
-
-
-
+1. Individual.cal_fitiness()
 """
