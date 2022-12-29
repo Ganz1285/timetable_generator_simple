@@ -65,7 +65,9 @@ class Instructors:
     def __init__(self, name,id):
         self.name=name
         self.id=id
-        self.subjects=[]
+        self.subjects={}
+
+
 
 
 def define_each_classes():
@@ -141,19 +143,18 @@ def define_subjects():
 
 
 def define_staffs(each_subjects):
-    l=[]
     check={}
     for i,j in each_subjects.items():
         for k in j:
             if k.instructor not in check:
                 x=Instructors(k.instructor,k.instructor)
-                x.subjects.append(k)
+                x.subjects[k.year]=k
+                
                 check[k.instructor]=x
-                l.append(x)
             else:
-                check[k.instructor].subjects.append(k)
-
-    return l
+                check[k.instructor].subjects[k.year]=k
+                
+    return check
 
 def details_of_each_year(subject_details):
     year = []
@@ -222,12 +223,10 @@ def display_classes(each_class):
 def shuffle_classes(each_subject, each_class, each_staff):
     d = {}
     for i, t in each_subject.items():
-        d[i] = []
+        d[i] = {}
         for k in t:
-            x = [k for _ in range(int(k.hours)) if not k.islab]
-            d[i].extend(x)
-        np.random.shuffle(d[i])
-
+            d[i][k]=int(k.hours)
+        
 
     # for z, q in d.items():
     #     l = []
@@ -241,20 +240,21 @@ def shuffle_classes(each_subject, each_class, each_staff):
 
 
     for i in range(30):
-        l=[]
+        staffs=[]
         z=0
         for x in range(1,6):
             subj=each_class[x][i//5][i%5]
             if subj.subject is None:
-                if d[x][z].instructor not in l:
-                    each_class[x][i//5][i%5].subject=d[x][z]
-                    l.append(d[x][z].instructor)
-                    z+=1
+                required_staffs=[t for q,t in each_staff.items() if x in t.subjects and t not in staffs]
+                picked_staff=random.choice(required_staffs)
+                staffs.append(required_staffs)
+                picked_subject=picked_staff.subjects[x]
+                if d[x][picked_subject]!=0:
+                    subj.subject=picked_subject
+                    d[x][picked_subject]-=1
                 else:
-                    z+=1
-                    
+                    pass
 
-    
 
 
     
@@ -268,10 +268,11 @@ def debug_result(each_class):
         it[i] = {}
         for k in j:
             for p in k:
-                if p.subject.name + "-" + p.subject.hours not in it[i]:
-                    it[i][p.subject.name + "-" + p.subject.hours] = 1
-                else:
-                    it[i][p.subject.name + "-" + p.subject.hours] += 1
+                if p.subject is not None:
+                    if p.subject.name + "-" + p.subject.hours not in it[i]:
+                        it[i][p.subject.name + "-" + p.subject.hours] = 1
+                    else:
+                        it[i][p.subject.name + "-" + p.subject.hours] += 1
 
     for i, j in it.items():
         for k, l in j.items():
@@ -296,8 +297,10 @@ class Individual(object):
         each_year = details_of_each_year(each_subject)
         schedule_labs(each_year, each_class)
         each_staff=define_staffs(each_subject)
-        # shuffle_classes(each_subject, each_class,each_staff)
-        # display_classes(each_class)
+        
+        shuffle_classes(each_subject, each_class,each_staff)
+        display_classes(each_class)
+        debug_result(each_class)
         return each_class
 
     def cal_fitness(self):
