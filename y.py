@@ -62,12 +62,10 @@ class Instructors:
 
     """
 
-    def __init__(self, name,id):
-        self.name=name
-        self.id=id
-        self.subjects={}
-
-
+    def __init__(self, name, id):
+        self.name = name
+        self.id = id
+        self.subjects = {}
 
 
 def define_each_classes():
@@ -143,18 +141,19 @@ def define_subjects():
 
 
 def define_staffs(each_subjects):
-    check={}
-    for i,j in each_subjects.items():
+    check = {}
+    for i, j in each_subjects.items():
         for k in j:
             if k.instructor not in check:
-                x=Instructors(k.instructor,k.instructor)
-                x.subjects[k.year]=k
-                
-                check[k.instructor]=x
+                x = Instructors(k.instructor, k.instructor)
+                x.subjects[k.year] = k
+
+                check[k.instructor] = x
             else:
-                check[k.instructor].subjects[k.year]=k
-                
+                check[k.instructor].subjects[k.year] = k
+
     return check
+
 
 def details_of_each_year(subject_details):
     year = []
@@ -225,8 +224,7 @@ def shuffle_classes(each_subject, each_class, each_staff):
     for i, t in each_subject.items():
         d[i] = {}
         for k in t:
-            d[i][k]=int(k.hours)
-        
+            d[i][k] = int(k.hours)
 
     # for z, q in d.items():
     #     l = []
@@ -238,34 +236,39 @@ def shuffle_classes(each_subject, each_class, each_staff):
     #         else:
     #             pass
 
-
+    ind = {}
     for i in range(30):
-        staffs=[]
-        z=0
-        for x in range(1,6):
-            subj=each_class[x][i//5][i%5]
+        staffs = []
+        z = 0
+        for x in range(1, 6):
+            subj = each_class[x][i // 5][i % 5]
             if subj.subject is None:
-                required_staffs=[t for q,t in each_staff.items() if x in t.subjects and t not in staffs]
-                picked_staff=random.choice(required_staffs)
-                staffs.append(required_staffs)
-                picked_subject=picked_staff.subjects[x]
-                if d[x][picked_subject]!=0:
-                    subj.subject=picked_subject
-                    d[x][picked_subject]-=1
+                required_staffs = [
+                    t
+                    for q, t in each_staff.items()
+                    if x in t.subjects and t not in staffs
+                ]
+                picked_staff = random.choice(required_staffs)
+
+                picked_subject = picked_staff.subjects[x]
+                if not picked_subject.islab:
+                    if d[x][picked_subject] != 0:
+                        subj.subject = picked_subject
+                        staffs.append(picked_staff)
+                        d[x][picked_subject] -= 1
+                    else:
+                        ind[(x, i // 5, i % 5)] = staffs
                 else:
-                    pass
-
-
-
-    
-
+                    ind[(x, i // 5, i % 5)] = staffs
+    for i, j in sorted(ind.items()):
+        print(i, *j)
 
 
 def debug_result(each_class):
     chk = []
     it = {}
     for i, j in each_class.items():
-        it[i] = {}
+        it[i] = {'None':0}
         for k in j:
             for p in k:
                 if p.subject is not None:
@@ -273,10 +276,17 @@ def debug_result(each_class):
                         it[i][p.subject.name + "-" + p.subject.hours] = 1
                     else:
                         it[i][p.subject.name + "-" + p.subject.hours] += 1
+                else:
+                    it[i]['None']+=1
 
     for i, j in it.items():
+        print(i)
         for k, l in j.items():
+            print(k,l)
             chk.append(k[-1] == str(l))
+        print('\n')
+
+
 
     if not all(chk):
         print("Produced timetable is incorrect ")
@@ -296,16 +306,15 @@ class Individual(object):
         each_subject = define_subjects()
         each_year = details_of_each_year(each_subject)
         schedule_labs(each_year, each_class)
-        each_staff=define_staffs(each_subject)
-        
-        shuffle_classes(each_subject, each_class,each_staff)
+        each_staff = define_staffs(each_subject)
+
+        shuffle_classes(each_subject, each_class, each_staff)
         display_classes(each_class)
         debug_result(each_class)
         return each_class
 
     def cal_fitness(self):
         fit = 0
-
 
         return random.choice(range(10))
 
@@ -318,13 +327,11 @@ def main():
     found = False
     population = []
 
-
     # create initial population
     for _ in range(POPULATION_SIZE):
         gnome = Individual.create_gnome()
         population.append(Individual(gnome))
         return ""
-    
 
     while not found:
 
@@ -344,8 +351,6 @@ def main():
 
         s = int((90 * POPULATION_SIZE) / 100)
 
-
-
     it = {}
     for i, t in population[0].chromosome.items():
         it[i] = []
@@ -353,7 +358,8 @@ def main():
         for k in t:
             it[i].append([])
             for p in k:
-                it[i][x].append(p.subject.name)
+                if not p.subject is None:
+                    it[i][x].append(p.subject.name)
             x += 1
     return it
 
@@ -361,8 +367,9 @@ def main():
 if __name__ == "__main__":
 
     result = main()
-    
+
 """
 INCORRECTLY WORKING FUNCTIONS:
 1. Individual.cal_fitiness()
+2. shuffle_classes()
 """
