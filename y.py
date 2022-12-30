@@ -101,7 +101,7 @@ def define_subjects():
             "TAM-2:TAMIL:LANG-1:5",
             "LANG-2:ENGLISH:LANG-2:5",
             "LAB:EP-3:Experimental Psychology- Practical-III:KAN:3",
-            "EDC:IS:Information Security:EDC:2",
+            "EDC:IS:Information Security:EDC-1:2",
         ],
         3: [
             "FMCS:Fundamentals of Marketing and Consumer Behavior:RUK:5",
@@ -125,8 +125,8 @@ def define_subjects():
             "CS:Counseling Psychology:KRT:5",
             "HP:Health Psychology:ANU:4",
             "LAB:CA:Case Analysis:KAA:3",
-            "EDC:PS:Professional Skills:EDC:4",
-            "EDC:HRM:Human Resource Management:EDC:4",
+            "EDC:PS:Professional Skills:EDC-2:4",
+            "EDC:HRM:Human Resource Management:EDC-3:4",
         ],
     }
     for j in subjects:
@@ -208,7 +208,7 @@ def display_classes(each_class):
                 z,
                 " ".join(
                     [
-                        "{:5}".format(p.subject.id)
+                        "{:5}".format(p.subject.instructor)
                         if p.subject != None
                         else "{:5}".format("None")
                         for p in k
@@ -226,6 +226,20 @@ def shuffle_classes(each_subject, each_class, each_staff):
         for k in t:
             d[i][k] = int(k.hours)
 
+
+    for i in range(30):
+        for x in range(1,6):
+
+            subj=each_class[x][i // 5][i % 5]
+            if subj.subject is not None and not subj.subject.islab:
+                subj.subject=None
+
+            else:
+                pass
+
+    # for i,j in each_staff.items():
+    #     print(i,5 in j.subjects)
+
     # for z, q in d.items():
     #     l = []
     #     x = 0
@@ -236,10 +250,19 @@ def shuffle_classes(each_subject, each_class, each_staff):
     #         else:
     #             pass
 
-    ind = {}
+    # for i,j in d.items():
+    #     print(i)
+    #     for x,y in j.items():
+    #         print(x.name,y)
+
+
+
+    
+    misbehaviour=0
     for i in range(30):
         staffs = []
         z = 0
+        # print(i//5,i%5)
         for x in range(1, 6):
             subj = each_class[x][i // 5][i % 5]
             if subj.subject is None:
@@ -248,20 +271,27 @@ def shuffle_classes(each_subject, each_class, each_staff):
                     for q, t in each_staff.items()
                     if x in t.subjects and t not in staffs
                 ]
-                picked_staff = random.choice(required_staffs)
-
-                picked_subject = picked_staff.subjects[x]
-                if not picked_subject.islab:
-                    if d[x][picked_subject] != 0:
-                        subj.subject = picked_subject
-                        staffs.append(picked_staff)
-                        d[x][picked_subject] -= 1
-                    else:
-                        ind[(x, i // 5, i % 5)] = staffs
+                # print(x)
+                # print('rs',[e.name for e in required_staffs])
+                picked_staffs = [s for s in required_staffs if not s.subjects[x].islab and d[x][s.subjects[x]]!=0]
+                # print('ps',[e.name for e in picked_staffs])
+                if picked_staffs!=[]:
+                    picked_staff = random.choice(picked_staffs)
+                    picked_subject=picked_staff.subjects[x]
+                    subj.subject = picked_subject
+                    staffs.append(picked_staff)
+                    d[x][picked_subject] -= 1
                 else:
-                    ind[(x, i // 5, i % 5)] = staffs
-    for i, j in sorted(ind.items()):
-        print(i, *j)
+                    misbehaviour+=1
+        
+    # print("Total Missed:",a)
+
+                
+    # for i,j in sorted(ind.items()):
+    #     print(i,*j) 
+
+    return misbehaviour
+
 
 
 def debug_result(each_class):
@@ -283,7 +313,8 @@ def debug_result(each_class):
         print(i)
         for k, l in j.items():
             print(k,l)
-            chk.append(k[-1] == str(l))
+            if k!='None':
+                chk.append(k[-1] == str(l))
         print('\n')
 
 
@@ -307,10 +338,14 @@ class Individual(object):
         each_year = details_of_each_year(each_subject)
         schedule_labs(each_year, each_class)
         each_staff = define_staffs(each_subject)
+        while True:
+            x=shuffle_classes(each_subject, each_class, each_staff)
+            if x==0:
+                break
+        
 
-        shuffle_classes(each_subject, each_class, each_staff)
-        display_classes(each_class)
-        debug_result(each_class)
+        # display_classes(each_class)
+        # debug_result(each_class)
         return each_class
 
     def cal_fitness(self):
@@ -331,7 +366,7 @@ def main():
     for _ in range(POPULATION_SIZE):
         gnome = Individual.create_gnome()
         population.append(Individual(gnome))
-        return ""
+
 
     while not found:
 
