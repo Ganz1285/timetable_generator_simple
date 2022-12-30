@@ -226,13 +226,12 @@ def shuffle_classes(each_subject, each_class, each_staff):
         for k in t:
             d[i][k] = int(k.hours)
 
-
     for i in range(30):
-        for x in range(1,6):
+        for x in range(1, 6):
 
-            subj=each_class[x][i // 5][i % 5]
+            subj = each_class[x][i // 5][i % 5]
             if subj.subject is not None and not subj.subject.islab:
-                subj.subject=None
+                subj.subject = None
 
             else:
                 pass
@@ -255,10 +254,7 @@ def shuffle_classes(each_subject, each_class, each_staff):
     #     for x,y in j.items():
     #         print(x.name,y)
 
-
-
-    
-    misbehaviour=0
+    misbehaviour = 0
     for i in range(30):
         staffs = []
         z = 0
@@ -273,32 +269,34 @@ def shuffle_classes(each_subject, each_class, each_staff):
                 ]
                 # print(x)
                 # print('rs',[e.name for e in required_staffs])
-                picked_staffs = [s for s in required_staffs if not s.subjects[x].islab and d[x][s.subjects[x]]!=0]
+                picked_staffs = [
+                    s
+                    for s in required_staffs
+                    if not s.subjects[x].islab and d[x][s.subjects[x]] != 0
+                ]
                 # print('ps',[e.name for e in picked_staffs])
-                if picked_staffs!=[]:
+                if picked_staffs != []:
                     picked_staff = random.choice(picked_staffs)
-                    picked_subject=picked_staff.subjects[x]
+                    picked_subject = picked_staff.subjects[x]
                     subj.subject = picked_subject
                     staffs.append(picked_staff)
                     d[x][picked_subject] -= 1
                 else:
-                    misbehaviour+=1
-        
+                    misbehaviour += 1
+
     # print("Total Missed:",a)
 
-                
     # for i,j in sorted(ind.items()):
-    #     print(i,*j) 
+    #     print(i,*j)
 
     return misbehaviour
-
 
 
 def debug_result(each_class):
     chk = []
     it = {}
     for i, j in each_class.items():
-        it[i] = {'None':0}
+        it[i] = {"None": 0}
         for k in j:
             for p in k:
                 if p.subject is not None:
@@ -307,17 +305,15 @@ def debug_result(each_class):
                     else:
                         it[i][p.subject.name + "-" + p.subject.hours] += 1
                 else:
-                    it[i]['None']+=1
+                    it[i]["None"] += 1
 
     for i, j in it.items():
         print(i)
         for k, l in j.items():
-            print(k,l)
-            if k!='None':
+            print(k, l)
+            if k != "None":
                 chk.append(k[-1] == str(l))
-        print('\n')
-
-
+        print("\n")
 
     if not all(chk):
         print("Produced timetable is incorrect ")
@@ -339,10 +335,9 @@ class Individual(object):
         schedule_labs(each_year, each_class)
         each_staff = define_staffs(each_subject)
         while True:
-            x=shuffle_classes(each_subject, each_class, each_staff)
-            if x==0:
+            x = shuffle_classes(each_subject, each_class, each_staff)
+            if x == 0:
                 break
-        
 
         # display_classes(each_class)
         # debug_result(each_class)
@@ -366,7 +361,6 @@ def main():
     for _ in range(POPULATION_SIZE):
         gnome = Individual.create_gnome()
         population.append(Individual(gnome))
-
 
     while not found:
 
