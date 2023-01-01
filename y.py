@@ -83,6 +83,21 @@ def define_each_classes():
     return each_classes
 
 
+def group_consecutives(vals, step=1):
+    """Return list of consecutive lists of numbers from vals (number list)."""
+    run = []
+    result = [run]
+    expect = None
+    for v in vals:
+        if (v == expect) or (expect is None):
+            run.append(v)
+        else:
+            run = [v]
+            result.append(run)
+        expect = v + step
+    return result
+
+
 def define_subjects():
     l = {}
     subjects = {
@@ -236,27 +251,13 @@ def shuffle_classes(each_subject, each_class, each_staff):
             else:
                 pass
 
-    # for i,j in each_staff.items():
-    #     print(i,5 in j.subjects)
-
-    # for z, q in d.items():
-    #     l = []
-    #     x = 0
-    #     for k in range(30):
-    #         if each_class[z][k // 5][k % 5].subject is None:
-    #             each_class[z][k // 5][k % 5].subject = q[x]
-    #             x += 1
-    #         else:
-    #             pass
-
-    # for i,j in d.items():
-    #     print(i)
-    #     for x,y in j.items():
-    #         print(x.name,y)
-
     misbehaviour = 0
     for i in range(30):
-        staffs = []
+        staffs = [
+            each_class[z][i // 5][i % 5].subject.instructor
+            for z in range(1, 6)
+            if each_class[z][i // 5][i % 5].subject is not None
+        ]
         z = 0
         # print(i//5,i%5)
         for x in range(1, 6):
@@ -265,7 +266,7 @@ def shuffle_classes(each_subject, each_class, each_staff):
                 required_staffs = [
                     t
                     for q, t in each_staff.items()
-                    if x in t.subjects and t not in staffs
+                    if x in t.subjects and t.name not in staffs
                 ]
                 # print(x)
                 # print('rs',[e.name for e in required_staffs])
@@ -279,7 +280,7 @@ def shuffle_classes(each_subject, each_class, each_staff):
                     picked_staff = random.choice(picked_staffs)
                     picked_subject = picked_staff.subjects[x]
                     subj.subject = picked_subject
-                    staffs.append(picked_staff)
+                    staffs.append(picked_staff.name)
                     d[x][picked_subject] -= 1
                 else:
                     misbehaviour += 1
@@ -324,7 +325,7 @@ def debug_result(each_class):
 class Individual(object):
     def __init__(self, chromosome):
         self.chromosome = chromosome
-        # self.sched=self.get_schedule()
+        self.sched = self.get_schedule()
         self.fitness = self.cal_fitness()
 
     @classmethod
@@ -345,8 +346,34 @@ class Individual(object):
 
     def cal_fitness(self):
         fit = 0
+        sched = self.sched
 
-        return random.choice(range(10))
+        for i, j in sched.items():
+            for x, y in j.items():
+                consecutives = group_consecutives(sorted(y))
+                for every in consecutives:
+                    if len(every) >= 3:
+                        fit += 1
+        return fit
+
+    def get_schedule(self):
+        sched = {}
+        for i, j in self.chromosome.items():
+            ind_x = 1
+            for x in j:
+                ind_y = 1
+                for y in x:
+                    if y.subject.instructor not in sched:
+                        sched[y.subject.instructor] = {ind_x: [ind_y]}
+                    else:
+                        if ind_x in sched[y.subject.instructor]:
+                            sched[y.subject.instructor][ind_x].extend([ind_y])
+                        else:
+                            sched[y.subject.instructor][ind_x] = [ind_y]
+                    ind_y += 1
+                ind_x += 1
+
+        return sched
 
 
 def main():
@@ -361,7 +388,6 @@ def main():
     for _ in range(POPULATION_SIZE):
         gnome = Individual.create_gnome()
         population.append(Individual(gnome))
-
     while not found:
 
         # sort the population in increasing order of fitness score
@@ -379,6 +405,8 @@ def main():
         new_generation.extend(population[:s])
 
         s = int((90 * POPULATION_SIZE) / 100)
+
+        break
 
     it = {}
     for i, t in population[0].chromosome.items():
