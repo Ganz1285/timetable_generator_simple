@@ -186,29 +186,39 @@ def details_of_each_year(subject_details):
 
 
 def schedule_labs(each_year, each_class):
+    lab_hours = []
     for i in each_year:
-        x = 3
         num_hours = int(i.lab.hours)
-        z = i.year
-        q = 0
-        while num_hours != 1:
-            if num_hours > 3:
-                if i.year == x:
-                    y = x + 2
-                    each_class[i.year][y][z].subject = i.lab
-                    z += 1
-                else:
-                    y = x - 2
-                    each_class[i.year][y][q].subject = i.lab
-                    q += 1
+        while num_hours >= 1:
+            f = random.randint(0, 29)
 
-            else:
-                fetch = each_class[i.year][i.year - 1][x].subject
-                if fetch is None:
-                    each_class[i.year][i.year - 1][x].subject = i.lab
-                    x += 1
-            num_hours -= 1
-        each_class[i.year][(i.year + 1) % 6][1].subject = i.lab
+            conflicts = [
+                each_class[z][f // 5][f % 5].subject
+                for z in range(1, 6)
+                if each_class[z][f // 5][f % 5].subject is not None
+            ]
+            sec_conflict = [each_class[i.year][f // 5][z].subject for z in range(5)]
+
+            if conflicts == [] and i.lab not in sec_conflict:
+                if num_hours >= 2:
+                    fetch = (f // 5, (f % 5) + 1)
+                    s_fetch = (f // 5, f % 5)
+                    if (
+                        f % 5 != 4
+                        and fetch not in lab_hours
+                        and s_fetch not in lab_hours
+                    ):
+                        each_class[i.year][f // 5][(f % 5) + 1].subject = i.lab
+                        each_class[i.year][f // 5][f % 5].subject = i.lab
+                        lab_hours.extend([(f // 5, (f % 5) + 1)])
+                        lab_hours.extend([(f // 5, f % 5)])
+                        num_hours -= 2
+                if num_hours == 1:
+                    fetch = (f // 5, f % 5)
+                    if fetch not in lab_hours:
+                        each_class[i.year][f // 5][f % 5].subject = i.lab
+                        lab_hours.extend([(f // 5, f % 5)])
+                        num_hours -= 1
 
 
 def display_classes(each_class):
@@ -223,7 +233,7 @@ def display_classes(each_class):
                 z,
                 " ".join(
                     [
-                        "{:5}".format(p.subject.instructor)
+                        "{:5}".format(p.subject.id)
                         if p.subject != None
                         else "{:5}".format("None")
                         for p in k
@@ -325,8 +335,8 @@ def debug_result(each_class):
 class Individual(object):
     def __init__(self, chromosome):
         self.chromosome = chromosome
-        self.sched = self.get_schedule()
-        self.fitness = self.cal_fitness()
+        # self.sched = self.get_schedule()
+        # self.fitness = self.cal_fitness()
 
     @classmethod
     def create_gnome(self):
@@ -340,8 +350,8 @@ class Individual(object):
             if x == 0:
                 break
 
-        # display_classes(each_class)
-        # debug_result(each_class)
+        display_classes(each_class)
+        debug_result(each_class)
         return each_class
 
     def cal_fitness(self):
@@ -388,6 +398,7 @@ def main():
     for _ in range(POPULATION_SIZE):
         gnome = Individual.create_gnome()
         population.append(Individual(gnome))
+        return ""
     while not found:
 
         # sort the population in increasing order of fitness score
@@ -407,6 +418,14 @@ def main():
         s = int((90 * POPULATION_SIZE) / 100)
 
         break
+    display_classes(population[0].chromosome)
+    # debug_result(population[0].chromosome)
+    print(population[0].fitness)
+    for i, j in population[0].sched.items():
+        print(i)
+        for q, w in sorted(j.items()):
+            print(q, sorted(w))
+        print()
 
     it = {}
     for i, t in population[0].chromosome.items():
