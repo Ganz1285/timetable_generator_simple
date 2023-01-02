@@ -12,7 +12,7 @@ from numpy import random
 import random
 
 
-POPULATION_SIZE = 100
+POPULATION_SIZE = 1000
 
 
 class subject:
@@ -262,6 +262,7 @@ def shuffle_classes(each_subject, each_class, each_staff):
                 pass
 
     misbehaviour = 0
+    staff_db = {1: [], 2: []}
     for i in range(30):
         staffs = [
             each_class[z][i // 5][i % 5].subject.instructor
@@ -276,7 +277,9 @@ def shuffle_classes(each_subject, each_class, each_staff):
                 required_staffs = [
                     t
                     for q, t in each_staff.items()
-                    if x in t.subjects and t.name not in staffs
+                    if x in t.subjects
+                    and t.name not in staffs
+                    and not (t.name in staff_db[1] and t.name not in staff_db[2])
                 ]
                 # print(x)
                 # print('rs',[e.name for e in required_staffs])
@@ -294,7 +297,8 @@ def shuffle_classes(each_subject, each_class, each_staff):
                     d[x][picked_subject] -= 1
                 else:
                     misbehaviour += 1
-
+            staff_db[2] = staff_db[1]
+            staff_db[1] = staffs
     # print("Total Missed:",a)
 
     # for i,j in sorted(ind.items()):
@@ -335,8 +339,8 @@ def debug_result(each_class):
 class Individual(object):
     def __init__(self, chromosome):
         self.chromosome = chromosome
-        # self.sched = self.get_schedule()
-        # self.fitness = self.cal_fitness()
+        self.sched = self.get_schedule()
+        self.fitness = self.cal_fitness()
 
     @classmethod
     def create_gnome(self):
@@ -350,8 +354,8 @@ class Individual(object):
             if x == 0:
                 break
 
-        display_classes(each_class)
-        debug_result(each_class)
+        # display_classes(each_class)
+        # debug_result(each_class)
         return each_class
 
     def cal_fitness(self):
@@ -362,8 +366,16 @@ class Individual(object):
             for x, y in j.items():
                 consecutives = group_consecutives(sorted(y))
                 for every in consecutives:
-                    if len(every) >= 3:
+                    if len(every) >= 4:
                         fit += 1
+
+        for i,j in self.chromosome.items():
+            for k in j:
+                l=set([q.subject.name for q in k])
+                if len(l)<=2:
+                    fit+=1
+
+
         return fit
 
     def get_schedule(self):
@@ -395,40 +407,26 @@ def main():
     population = []
 
     # create initial population
-    for _ in range(POPULATION_SIZE):
-        gnome = Individual.create_gnome()
-        population.append(Individual(gnome))
-        return ""
-    while not found:
 
-        # sort the population in increasing order of fitness score
-        population = sorted(population, key=lambda x: x.fitness)
-        if population[0].fitness <= 0:
+    while not found:
+        every_gnome = Individual.create_gnome()
+        gnome = Individual(every_gnome)
+        
+        if gnome.fitness <= 0:
             found = True
-            # break
-            # break
-            # Otherwise generate new offsprings for new generation
-        new_generation = []
+        print(f"GENERATION:{generation},fitness:{gnome.fitness}")
+
+        generation += 1  # sort the population in increasing order of fitness score
+
+        # break
+        # break
+        # Otherwise generate new offsprings for new generation
 
         # Perform Elitism, that mean 10% of fittest population
         # goes to the next generation
-        s = int((10 * POPULATION_SIZE) / 100)
-        new_generation.extend(population[:s])
-
-        s = int((90 * POPULATION_SIZE) / 100)
-
-        break
-    display_classes(population[0].chromosome)
-    # debug_result(population[0].chromosome)
-    print(population[0].fitness)
-    for i, j in population[0].sched.items():
-        print(i)
-        for q, w in sorted(j.items()):
-            print(q, sorted(w))
-        print()
 
     it = {}
-    for i, t in population[0].chromosome.items():
+    for i, t in gnome.chromosome.items():
         it[i] = []
         x = 0
         for k in t:
@@ -437,6 +435,8 @@ def main():
                 if not p.subject is None:
                     it[i][x].append(p.subject.name)
             x += 1
+    print(it)
+    display_classes(gnome.chromosome)
     return it
 
 
